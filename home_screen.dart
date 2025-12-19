@@ -88,112 +88,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return (dateOrder[dateA] ?? 999).compareTo(dateOrder[dateB] ?? 999);
   }
 
-  void _showSortOptions(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: theme.scaffoldBackgroundColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.secondary.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // Title
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Row(
-                children: [
-                  Icon(Icons.sort, color: theme.colorScheme.primary),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Sort By',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 20),
-            // Sort options
-            _buildSortOption(
-              context,
-              'Newest First',
-              'newest',
-              Icons.access_time,
-            ),
-            _buildSortOption(
-              context,
-              'Oldest First',
-              'oldest',
-              Icons.history,
-            ),
-            _buildSortOption(
-              context,
-              'Price: Low to High',
-              'price_low',
-              Icons.arrow_upward,
-            ),
-            _buildSortOption(
-              context,
-              'Price: High to Low',
-              'price_high',
-              Icons.arrow_downward,
-            ),
-            const SizedBox(height: 10),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSortOption(
-    BuildContext context,
-    String title,
-    String value,
-    IconData icon,
-  ) {
-    final theme = Theme.of(context);
-    final isSelected = _sortBy == value;
-
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: isSelected ? theme.colorScheme.primary : theme.colorScheme.secondary,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-          color: isSelected ? theme.colorScheme.primary : null,
-        ),
-      ),
-      trailing: isSelected
-          ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
-          : null,
-      onTap: () {
-        setState(() {
-          _sortBy = value;
-        });
-        Navigator.pop(context);
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -311,16 +205,61 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                 ),
-                // Sort Button
+                // Sort Button (Updated to PopupMenuButton for dropdown)
                 Padding(
                   padding: const EdgeInsets.only(left: 8, right: 12),
-                  child: Material(
-                    color: theme.colorScheme.primary,
-                    borderRadius: BorderRadius.circular(20),
-                    elevation: 2,
-                    child: InkWell(
-                      onTap: () => _showSortOptions(context),
+                  child: PopupMenuButton<String>(
+                    onSelected: (value) {
+                      setState(() {
+                        _sortBy = value;
+                      });
+                    },
+                    itemBuilder: (BuildContext context) => [
+                      PopupMenuItem<String>(
+                        value: 'newest',
+                        child: Row(
+                          children: [
+                            Icon(Icons.access_time, color: theme.colorScheme.primary),
+                            const SizedBox(width: 12),
+                            Text('Newest First'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'oldest',
+                        child: Row(
+                          children: [
+                            Icon(Icons.history, color: theme.colorScheme.primary),
+                            const SizedBox(width: 12),
+                            Text('Oldest First'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'price_low',
+                        child: Row(
+                          children: [
+                            Icon(Icons.arrow_upward, color: theme.colorScheme.primary),
+                            const SizedBox(width: 12),
+                            Text('Price: Low to High'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'price_high',
+                        child: Row(
+                          children: [
+                            Icon(Icons.arrow_downward, color: theme.colorScheme.primary),
+                            const SizedBox(width: 12),
+                            Text('Price: High to Low'),
+                          ],
+                        ),
+                      ),
+                    ],
+                    child: Material(
+                      color: theme.colorScheme.primary,
                       borderRadius: BorderRadius.circular(20),
+                      elevation: 2,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: Row(
@@ -414,6 +353,8 @@ final List<Listing> demoListings = [
     date: 'Today',
     category: 'Furniture',
     description: 'Comfortable office chair in good condition. Adjustable height and armrests. Perfect for home office setup.',
+    contact: '+1-234-567-8901', // Sample contact
+    email: 'seller1@company.com', // Sample email
   ),
   Listing(
     id: '2',
@@ -424,6 +365,8 @@ final List<Listing> demoListings = [
     date: 'Yesterday',
     category: 'Electronics',
     description: 'Full HD Dell monitor, 24 inches. Excellent display quality. Used for 2 years, no scratches or dead pixels.',
+    contact: '+1-234-567-8902',
+    email: 'seller2@company.com',
   ),
   Listing(
     id: '3',
@@ -434,6 +377,8 @@ final List<Listing> demoListings = [
     date: '2 days ago',
     category: 'Books',
     description: 'Collection of programming books including Python, JavaScript, and Data Structures. Great for beginners.',
+    contact: '+1-234-567-8903',
+    email: 'seller3@company.com',
   ),
   Listing(
     id: '4',
@@ -445,5 +390,7 @@ final List<Listing> demoListings = [
     category: 'Other',
     isDonation: true,
     description: 'Various office supplies including pens, notebooks, folders. Free to anyone who needs them.',
+    contact: '+1-234-567-8904',
+    email: 'seller4@company.com',
   ),
 ];
