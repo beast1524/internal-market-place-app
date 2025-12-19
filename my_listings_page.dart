@@ -5,7 +5,7 @@ class MyListingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final background = const Color(0xFFF5EFE7);
+    final background = Theme.of(context).scaffoldBackgroundColor;
 
     // Static sample data for now (replace with Supabase later)
     final listings = [
@@ -35,7 +35,7 @@ class MyListingsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF3C3C3C),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         title: const Text('My Listings'),
       ),
       body: ListView.builder(
@@ -79,7 +79,9 @@ class MyListingsPage extends StatelessWidget {
                   Text(
                     'Status: $status',
                     style: TextStyle(
-                      color: isActive ? Colors.green : Colors.red,
+                      color: isActive
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.error,
                       fontWeight: FontWeight.w500,
                     ),
                   ),

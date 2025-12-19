@@ -6,6 +6,7 @@ import 'sell_listing_page.dart';
 import 'my_listings_page.dart';
 import 'account_page.dart';
 import 'admin_dashboard_page.dart'; // NEW
+import 'package:flutter_application_1/theme_controller.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({
@@ -34,8 +35,21 @@ class _MainNavigationState extends State<MainNavigation> {
 
     _currentIndex = widget.initialIndex;
 
+    // Build a theme toggle button to pass into the HomeScreen
+    final themeToggle = ValueListenableBuilder(
+      valueListenable: ThemeController.instance.mode,
+      builder: (context, ThemeMode mode, _) {
+        final isDark = mode == ThemeMode.dark;
+        return IconButton(
+          icon: Icon(isDark ? Icons.dark_mode : Icons.light_mode),
+          onPressed: () => ThemeController.instance.toggle(),
+          tooltip: isDark ? 'Switch to light' : 'Switch to dark',
+        );
+      },
+    );
+
     _pages = [
-      const HomeScreen(),        // 0
+      HomeScreen(themeToggleButton: themeToggle),        // 0
       const WishlistScreen(),    // 1
       const SellListingPage(),   // 2
 

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../services/user_manager.dart';
 
 class SellListingPage extends StatefulWidget {
   const SellListingPage({super.key});
@@ -18,6 +19,8 @@ class _SellListingPageState extends State<SellListingPage> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _pickupLocationController = TextEditingController();
+  final _contactController = TextEditingController();
+  final _emailController = TextEditingController();
 
   String _listingType = 'Sell'; // Sell / Rent / Donation
   String? _selectedCategory;
@@ -66,8 +69,14 @@ class _SellListingPageState extends State<SellListingPage> {
 
   Widget _buildListingTypeChip(String value) {
     final bool selected = _listingType == value;
+    final theme = Theme.of(context);
     return ChoiceChip(
-      label: Text(value),
+      label: Text(
+        value,
+        style: TextStyle(
+          color: selected ? theme.colorScheme.onPrimary : Colors.black87,
+        ),
+      ),
       selected: selected,
       onSelected: (_) {
         setState(() {
@@ -77,15 +86,12 @@ class _SellListingPageState extends State<SellListingPage> {
           }
         });
       },
-      selectedColor: const Color(0xFF8B6B4A), // warm-ish
-      labelStyle: TextStyle(
-        color: selected ? Colors.white : Colors.black87,
-      ),
-      backgroundColor: const Color(0xFFF1EAE1),
+      selectedColor: theme.colorScheme.primary,
+      backgroundColor: theme.chipTheme.backgroundColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
         side: BorderSide(
-          color: selected ? const Color(0xFF8B6B4A) : const Color(0xFFB0A090),
+          color: selected ? theme.colorScheme.primary : Colors.grey.shade400,
         ),
       ),
     );
@@ -97,17 +103,22 @@ class _SellListingPageState extends State<SellListingPage> {
     _descriptionController.dispose();
     _priceController.dispose();
     _pickupLocationController.dispose();
+    _contactController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    final background = const Color(0xFFF5EFE7);
+  void initState() {
+    super.initState();
+    // Pre-fill email from user manager
+    _emailController.text = UserManager.email;
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF3C3C3C),
         title: const Text('Sell an Item'),
       ),
       body: SafeArea(
@@ -123,8 +134,6 @@ class _SellListingPageState extends State<SellListingPage> {
                   controller: _titleController,
                   decoration: InputDecoration(
                     labelText: 'Title',
-                    filled: true,
-                    fillColor: Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -141,8 +150,6 @@ class _SellListingPageState extends State<SellListingPage> {
                   decoration: InputDecoration(
                     labelText: 'Description',
                     alignLabelWithHint: true,
-                    filled: true,
-                    fillColor: Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -163,7 +170,6 @@ class _SellListingPageState extends State<SellListingPage> {
                   padding: const EdgeInsets.symmetric(
                       vertical: 8, horizontal: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1EAE1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -189,8 +195,6 @@ class _SellListingPageState extends State<SellListingPage> {
                   ],
                   decoration: InputDecoration(
                     labelText: 'Price',
-                    filled: true,
-                    fillColor: _isDonation ? Colors.grey.shade200 : Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -212,8 +216,6 @@ class _SellListingPageState extends State<SellListingPage> {
                   value: _selectedCategory,
                   decoration: InputDecoration(
                     labelText: 'Category',
-                    filled: true,
-                    fillColor: Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -235,8 +237,6 @@ class _SellListingPageState extends State<SellListingPage> {
                   value: _selectedCondition,
                   decoration: InputDecoration(
                     labelText: 'Condition',
-                    filled: true,
-                    fillColor: Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -258,8 +258,6 @@ class _SellListingPageState extends State<SellListingPage> {
                   controller: _pickupLocationController,
                   decoration: InputDecoration(
                     labelText: 'Pickup Location (optional)',
-                    filled: true,
-                    fillColor: Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -267,6 +265,40 @@ class _SellListingPageState extends State<SellListingPage> {
                 ),
 
                 const SizedBox(height: 16),
+
+                // Contact number
+                TextFormField(
+                  controller: _contactController,
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    labelText: 'Contact Number',
+                    hintText: '10-digit mobile number',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Enter contact number';
+                    final digits = v.trim();
+                    if (digits.length != 10) return 'Contact number must be 10 digits';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+
+                // Account email (auto-filled)
+                TextFormField(
+                  controller: _emailController,
+                  readOnly: true,
+                  decoration: InputDecoration(
+                    labelText: 'Account Email',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+
 
                 // Images
                 const Text(
@@ -295,7 +327,6 @@ class _SellListingPageState extends State<SellListingPage> {
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: Colors.grey.shade400),
                         ),

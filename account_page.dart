@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'edit_profile_page.dart';
 import 'history_page.dart'; // contains enum HistoryFilter
+import '../../../../services/user_manager.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -14,6 +15,13 @@ class _AccountPageState extends State<AccountPage> {
   String _email = 'john.doe@company.com';
   String? _department;
   String? _location;
+
+  @override
+  void initState() {
+    super.initState();
+    // ensure shared user manager is in sync
+    UserManager.email = _email;
+  }
 
   // Dummy history data – used by HistoryPage
   final List<Map<String, dynamic>> _history = [
@@ -55,6 +63,9 @@ class _AccountPageState extends State<AccountPage> {
         _name = (result['name'] as String?) ?? _name;
         _department = result['department'] as String?;
         _location = result['location'] as String?;
+        final newEmail = (result['email'] as String?) ?? _email;
+        _email = newEmail;
+        UserManager.email = newEmail;
       });
     }
   }
@@ -129,12 +140,8 @@ void _onLogoutAllDevices() {
 
   @override
   Widget build(BuildContext context) {
-    final background = const Color(0xFFF5EFE7);
-
     return Scaffold(
-      backgroundColor: background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF3C3C3C),
         title: const Text('Account'),
       ),
       body: SafeArea(
