@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../services/user_manager.dart';
+import 'package:flutter_application_1/src/services/user_manager.dart';
 
 class SellListingPage extends StatefulWidget {
   const SellListingPage({super.key});
@@ -22,7 +22,7 @@ class _SellListingPageState extends State<SellListingPage> {
   final _contactController = TextEditingController();
   final _emailController = TextEditingController();
 
-  String _listingType = 'Sell'; // Sell / Rent / Donation
+  String _listingType = 'Sell'; // Sell / Rent / Lend / Donation / Share
   String? _selectedCategory;
   String? _selectedCondition;
 
@@ -32,9 +32,9 @@ class _SellListingPageState extends State<SellListingPage> {
   final _categories = <String>[
     'Electronics',
     'Furniture',
-    'Books',
     'Stationery',
     'Sports',
+    'House',
     'Others',
   ];
 
@@ -46,6 +46,7 @@ class _SellListingPageState extends State<SellListingPage> {
   ];
 
   bool get _isDonation => _listingType == 'Donation';
+  bool get _isShareEnabled => _selectedCategory == 'House';
 
   Future<void> _pickImage() async {
     final result = await _imagePicker.pickMultiImage();
@@ -69,29 +70,34 @@ class _SellListingPageState extends State<SellListingPage> {
 
   Widget _buildListingTypeChip(String value) {
     final bool selected = _listingType == value;
+    final bool enabled = value != 'Share' || _isShareEnabled;
     final theme = Theme.of(context);
-    return ChoiceChip(
-      label: Text(
-        value,
-        style: TextStyle(
-          color: selected ? theme.colorScheme.onPrimary : Colors.black87,
+    
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.5,
+      child: ChoiceChip(
+        label: Text(
+          value,
+          style: TextStyle(
+            color: selected ? theme.colorScheme.onPrimary : Colors.black87,
+          ),
         ),
-      ),
-      selected: selected,
-      onSelected: (_) {
-        setState(() {
-          _listingType = value;
-          if (_isDonation) {
-            _priceController.clear();
-          }
-        });
-      },
-      selectedColor: theme.colorScheme.primary,
-      backgroundColor: theme.chipTheme.backgroundColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(
-          color: selected ? theme.colorScheme.primary : Colors.grey.shade400,
+        selected: selected,
+        onSelected: enabled ? (_) {
+          setState(() {
+            _listingType = value;
+            if (_isDonation) {
+              _priceController.clear();
+            }
+          });
+        } : null,
+        selectedColor: theme.colorScheme.primary,
+        backgroundColor: theme.chipTheme.backgroundColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(
+            color: selected ? theme.colorScheme.primary : Colors.grey.shade400,
+          ),
         ),
       ),
     );
@@ -160,6 +166,37 @@ class _SellListingPageState extends State<SellListingPage> {
                 ),
                 const SizedBox(height: 16),
 
+                // Category dropdown (moved before Listing Type)
+                DropdownButtonFormField<String>(
+                  value: _selectedCategory,
+                  isExpanded: true,
+                  menuMaxHeight: 320,
+                  decoration: InputDecoration(
+                    labelText: 'Category',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  items: _categories
+                      .map((c) => DropdownMenuItem(
+                            value: c,
+                            child: Text(c),
+                          ))
+                      .toList(),
+                  onChanged: (val) {
+                    setState(() {
+                      _selectedCategory = val;
+                      // Reset listing type if Share was selected and House is deselected
+                      if (_listingType == 'Share' && val != 'House') {
+                        _listingType = 'Sell';
+                      }
+                    });
+                  },
+                  validator: (v) =>
+                      v == null ? 'Please select a category' : null,
+                ),
+                const SizedBox(height: 16),
+
                 // Listing Type
                 const Text(
                   'Listing Type',
@@ -172,17 +209,30 @@ class _SellListingPageState extends State<SellListingPage> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       _buildListingTypeChip('Sell'),
-                      const SizedBox(width: 8),
                       _buildListingTypeChip('Rent'),
-                      const SizedBox(width: 8),
+                      _buildListingTypeChip('Lend'),
                       _buildListingTypeChip('Donation'),
+                      _buildListingTypeChip('Share'),
                     ],
                   ),
                 ),
+                if (_listingType == 'Share' && _isShareEnabled)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Share option is for house sharing/roommate listings',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 16),
 
                 // Price (disabled for Donation)
@@ -208,27 +258,6 @@ class _SellListingPageState extends State<SellListingPage> {
                     }
                     return null;
                   },
-                ),
-                const SizedBox(height: 12),
-
-                // Category dropdown
-                DropdownButtonFormField<String>(
-                  value: _selectedCategory,
-                  decoration: InputDecoration(
-                    labelText: 'Category',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  items: _categories
-                      .map((c) => DropdownMenuItem(
-                            value: c,
-                            child: Text(c),
-                          ))
-                      .toList(),
-                  onChanged: (val) => setState(() => _selectedCategory = val),
-                  validator: (v) =>
-                      v == null ? 'Please select a category' : null,
                 ),
                 const SizedBox(height: 12),
 
@@ -298,7 +327,7 @@ class _SellListingPageState extends State<SellListingPage> {
                     ),
                   ),
                 ),
-
+                const SizedBox(height: 16),
 
                 // Images
                 const Text(
